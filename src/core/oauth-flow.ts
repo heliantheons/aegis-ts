@@ -150,6 +150,7 @@ export class OAuthFlow {
         url: metadata.token_endpoint,
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: body.toString(),
+        credentials: "omit",
       });
       if (response.status !== 200) {
         const error = response.data as {

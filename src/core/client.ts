@@ -160,7 +160,7 @@ function defaultHttpClient(): HttpClient {
         method: config.method,
         headers: config.headers,
         body: config.body,
-        credentials: "include",
+        credentials: config.credentials ?? "include",
       });
       const text = await response.text();
       let data: unknown;

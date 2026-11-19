@@ -101,6 +101,8 @@ const auth = new WebAuth({
 
 Discovery and JWKS requests use the supplied `httpClient`. Secure Web Crypto is required; environments that need an explicit provider can pass `crypto` in `AuthConfig` or `WebAuthConfig` for PKCE/state/nonce generation. The SDK never installs globals or falls back to insecure randomness. Tests can inject storage, HTTP, and Web Crypto independently.
 
+Custom HTTP adapters must honor `HttpRequestConfig.credentials`, which uses Fetch credential modes (`"omit"`, `"same-origin"`, `"include"`). All OIDC discovery, JWKS, authorization-code exchange, and refresh requests explicitly use `"omit"`, allowing cross-origin public OIDC responses with `Access-Control-Allow-Origin: *`. An unspecified mode defaults to `"include"` in the built-in client so internal cookie-based APIs retain their existing behavior.
+
 Git dependencies build the package through the standard `prepare` script. Package versions follow the existing release process; feature branches do not change the release version.
 
 浏览器应用属于 OAuth public client，不要把 `client_secret` 放进前端代码。

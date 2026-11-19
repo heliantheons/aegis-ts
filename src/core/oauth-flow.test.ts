@@ -118,6 +118,46 @@ function token(
 }
 
 describe("OIDC authorize contract", () => {
+  it("omits credentials for every OIDC fetch and retains cookies for internal APIs", async () => {
+    const f = fixture();
+    const requests: { url: string; credentials?: RequestCredentials }[] = [];
+    let response: TokenResponse | undefined;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, options?: RequestInit) => {
+        requests.push({ url, credentials: options?.credentials });
+        let data: unknown;
+        if (url === `${issuer}/.well-known/openid-configuration`)
+          data = metadata;
+        else if (url === metadata.jwks_uri) data = { keys: [publicJWK] };
+        else if (url === metadata.token_endpoint) data = response;
+        else if (url === `${issuer}/connections`) data = { idp: [] };
+        else throw new Error(`Unexpected fetch: ${url}`);
+        return new Response(JSON.stringify(data), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }),
+    );
+    const auth = new Auth({ ...f.config, httpClient: undefined });
+    const flow = await auth.authorize({ scopes: ["openid"] });
+    response = token(await sign(new URL(flow.url).searchParams.get("nonce")!));
+    await auth.handleCallback("code", flow.state);
+    response = token(await sign(undefined), "refreshed-access");
+    await auth.refreshToken();
+    await auth.getConnections();
+    expect(requests).toEqual([
+      {
+        url: `${issuer}/.well-known/openid-configuration`,
+        credentials: "omit",
+      },
+      { url: metadata.token_endpoint, credentials: "omit" },
+      { url: metadata.jwks_uri, credentials: "omit" },
+      { url: metadata.token_endpoint, credentials: "omit" },
+      { url: `${issuer}/connections`, credentials: "include" },
+    ]);
+  });
+
   it("discovers endpoints and forwards independent state, nonce, PKCE and prompt", async () => {
     const f = fixture({
       authorization_endpoint: `${origin}/oauth2/authorize`,

@@ -209,6 +209,7 @@ export class TokenManager {
       url: metadata.token_endpoint,
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: body.toString(),
+      credentials: "omit",
     });
     if (res.status !== 200)
       throw new AuthError(ErrorCodes.INVALID_GRANT, "Token refresh failed");

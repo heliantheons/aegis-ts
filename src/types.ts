@@ -53,6 +53,8 @@ export interface HttpRequestConfig {
   headers?: Record<string, string>;
   body?: string | FormData;
   timeout?: number;
+  /** Fetch credential mode; defaults to include for internal cookie APIs. */
+  credentials?: RequestCredentials;
 }
 
 export interface HttpResponse<T = unknown> {

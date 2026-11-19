@@ -153,6 +153,7 @@ export class OIDCProvider {
     const res = await this.http.request<ProviderMetadata>({
       method: "GET",
       url: `${this.issuer}/.well-known/openid-configuration`,
+      credentials: "omit",
     });
     const data = res.data;
     if (
@@ -218,6 +219,7 @@ export class OIDCProvider {
     const res = await this.http.request<JSONWebKeySet>({
       method: "GET",
       url: metadata.jwks_uri,
+      credentials: "omit",
     });
     if (
       res.status !== 200 ||
