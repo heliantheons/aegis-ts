@@ -1,6 +1,6 @@
 # Aegis TS
 
-`@heliantheons/aegis-ts` 是 Web 认证 SDK，支持 OAuth 2.1 + PKCE、浏览器跳转、回调处理、token 管理与用户信息读取。
+`@heliantheons/aegis-ts` 是 Web 认证 SDK，支持标准 OpenID Connect Authorization Code + PKCE、浏览器跳转、回调处理、token 管理与用户信息读取。
 
 ## 技术栈
 
@@ -8,7 +8,7 @@
 - tsup 构建
 - Vitest 测试
 - ESLint + Prettier
-- 运行时依赖尽量保持轻量，目前核心依赖为 `paseto-ts`
+- 运行时依赖为 `jose`，用于 RS256 JWT ID Token 与标准 JWKS 校验；Access Token 保持 PASETO 格式并视为不透明字符串。
 
 ## 常用命令
 
@@ -33,6 +33,8 @@ pnpm format
 
 - 不要在 SDK 中硬编码业务站点、租户或环境域名。
 - 存储适配器需要保持可替换；浏览器能力和纯逻辑能力要分层。
+- Discovery issuer 为 endpoint origin + `/api`，使用发现的 authorization/token/JWKS 地址；校验 state、nonce、issuer、client audience 和有效期后才保存新会话。
+- PKCE、state、nonce 必须使用安全 Web Crypto；测试通过 crypto/HTTP/storage 适配器注入，不得添加 Math.random 降级或全局副作用。
 - token 刷新、错误传播、回调状态校验必须有测试覆盖。
 - 修改公开类型或导出入口时，同步 README。
 
