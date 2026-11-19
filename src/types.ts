@@ -22,6 +22,8 @@ export interface AuthConfig {
   redirectUri: string;
   storage?: StorageAdapter;
   httpClient?: HttpClient;
+  /** Web Crypto provider for PKCE/state/nonce; defaults to globalThis.crypto. */
+  crypto?: Crypto;
 }
 
 export interface AuthorizeOptions {
@@ -29,6 +31,8 @@ export interface AuthorizeOptions {
   audiences?: Record<string, AudienceScope>;
   scopes: string[];
   prompt?: string;
+  /** Maximum authentication age in seconds; 0 requests fresh authentication. */
+  maxAge?: number;
   state?: string;
   redirectUri?: string;
 }
@@ -49,6 +53,8 @@ export interface HttpRequestConfig {
   headers?: Record<string, string>;
   body?: string | FormData;
   timeout?: number;
+  /** Fetch credential mode; defaults to include for internal cookie APIs. */
+  credentials?: RequestCredentials;
 }
 
 export interface HttpResponse<T = unknown> {
@@ -95,22 +101,16 @@ export interface TokenStore {
 export interface IDTokenClaims {
   sub: string;
   iss: string;
-  aud: string;
-  iat: string;
-  exp: string;
-  nic?: string;
-  pic?: string;
-}
-
-export interface PublicKeyInfo {
-  version: string;
-  purpose: string;
-  public_key: string;
-}
-
-export interface PublicKeysResponse {
-  main: PublicKeyInfo;
-  keys: PublicKeyInfo[];
+  aud: string | string[];
+  iat: number;
+  exp: number;
+  auth_time?: number;
+  nonce?: string;
+  azp?: string;
+  nickname?: string;
+  picture?: string;
+  email?: string;
+  phone_number?: string;
 }
 
 // ==================== PKCE ====================

@@ -32,8 +32,6 @@ export type {
   VerifyChallengeResponse,
   LoginRequest,
   RedirectAction,
-  PublicKeyInfo,
-  PublicKeysResponse,
   CodeChallengeMethod,
 } from "@/types";
 

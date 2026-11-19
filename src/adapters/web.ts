@@ -14,6 +14,7 @@ export interface WebAuthConfig {
   redirectUri: string;
   storage?: StorageAdapter;
   httpClient?: HttpClient;
+  crypto?: Crypto;
 }
 
 export interface AuthorizeParams {
@@ -22,6 +23,7 @@ export interface AuthorizeParams {
   scopes: string[];
   redirectUri?: string;
   prompt?: string;
+  maxAge?: number;
   state?: string;
   returnTo?: string;
 }
@@ -38,6 +40,7 @@ export class WebAuth {
       redirectUri: config.redirectUri,
       storage: config.storage ?? new BrowserStorageAdapter(),
       httpClient: config.httpClient,
+      crypto: config.crypto,
     };
     this.auth = new Auth(authConfig);
   }
@@ -55,6 +58,7 @@ export class WebAuth {
       audiences,
       scopes: params.scopes,
       prompt: params.prompt,
+      maxAge: params.maxAge,
       state: params.state,
       redirectUri: params.redirectUri ?? this.config.redirectUri,
     });
@@ -74,8 +78,17 @@ export class WebAuth {
 
     window.history.replaceState({}, "", window.location.pathname);
 
-    if (error) return { success: false, error: errorDescription || error };
-    if (!code) return { success: false, error: "No authorization code found" };
+    if (error || !code) {
+      try {
+        await this.auth.cancelAuthorization(error ? (state ?? "") : undefined);
+        return {
+          success: false,
+          error: errorDescription || error || "No authorization code found",
+        };
+      } catch (err) {
+        return { success: false, error: (err as Error).message };
+      }
+    }
 
     try {
       const result = await this.auth.handleCallback(code, state ?? undefined);

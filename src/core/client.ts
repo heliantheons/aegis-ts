@@ -23,6 +23,7 @@ import { TokenManager } from "@core/token-manager";
 import { OAuthFlow } from "@core/oauth-flow";
 import { API } from "@core/api";
 import { BrowserStorageAdapter } from "@core/storage";
+import { OIDCProvider } from "@core/oidc";
 
 export class Auth {
   private events: EventBus;
@@ -33,6 +34,7 @@ export class Auth {
   constructor(config: AuthConfig) {
     const storage = config.storage ?? defaultStorage();
     const http = config.httpClient ?? defaultHttpClient();
+    const oidc = new OIDCProvider(http, config.endpoint, config.clientId);
 
     this.events = new EventBus();
 
@@ -40,16 +42,17 @@ export class Auth {
       storage,
       events: this.events,
       http,
-      endpoint: config.endpoint,
+      oidc,
       clientId: config.clientId,
     });
 
     this.flow = new OAuthFlow({
-      endpoint: config.endpoint,
       clientId: config.clientId,
       redirectUri: config.redirectUri,
       storage,
       http,
+      oidc,
+      crypto: config.crypto,
       tokens: this.tokens,
       events: this.events,
     });
@@ -67,6 +70,10 @@ export class Auth {
 
   async handleCallback(code: string, state?: string): Promise<CallbackResult> {
     return this.flow.handleCallback(code, state);
+  }
+
+  async cancelAuthorization(state?: string): Promise<void> {
+    await this.flow.cancel(state);
   }
 
   // ==================== Token ====================
@@ -153,7 +160,7 @@ function defaultHttpClient(): HttpClient {
         method: config.method,
         headers: config.headers,
         body: config.body,
-        credentials: "include",
+        credentials: config.credentials ?? "include",
       });
       const text = await response.text();
       let data: unknown;

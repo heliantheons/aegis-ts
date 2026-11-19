@@ -12,8 +12,9 @@ const packageJson = JSON.parse(
 const fixture = mkdtempSync(join(tmpdir(), "aegis-ts-package-"));
 
 try {
+  // test:package builds first; avoid a duplicate prepare build in the JSON output.
   const packResult = JSON.parse(
-    execFileSync("npm", ["pack", "--json", "--pack-destination", fixture], {
+    execFileSync("npm", ["pack", "--ignore-scripts", "--json", "--pack-destination", fixture], {
       cwd: root,
       encoding: "utf8",
     }),
